@@ -16,7 +16,7 @@ No accounts. Marking is done by Claude via the Anthropic API.
 |---|---|
 | `src/lib/spec.ts` | Edexcel 1BS0 question types, tariffs, level descriptors and AOs (our own wording) |
 | `src/lib/questions.ts` | Original practice questions and case studies |
-| `src/lib/marker.ts` | Marking prompt and Claude call (structured output, prompt caching, refusal fallback) |
+| `src/lib/marker.ts` | Marking prompt and Claude call (structured output, prompt caching) |
 | `src/lib/ratelimit.ts` | Per-visitor burst and daily limits plus a global daily cap |
 | `src/app/api/mark/route.ts` | `POST /api/mark` |
 | `src/app/Marker.tsx` | The student UI |
@@ -39,6 +39,8 @@ npm run dev
 
 ## Running costs
 
-With `claude-opus-5-5` at medium effort, one marked answer costs roughly 3-4p (the long system prompt is cached). `LIMIT_GLOBAL_PER_DAY` caps the daily bill. Setting `MARKING_MODEL=claude-haiku-5-5` cuts the cost by over 90%, at some cost to marking quality.
+Marking uses `claude-haiku-5-5` at high effort, which costs well under 1p per answer (roughly £1 per 500 answers). The long system prompt is cached. `LIMIT_GLOBAL_PER_DAY` caps the daily bill.
+
+For more accurate marking of long answers, set `MARKING_MODEL=claude-opus-5-5` and `MARKING_EFFORT=medium`. That costs roughly 3-4p per answer and also turns on server-side refusal fallback.
 
 Not affiliated with or endorsed by Pearson Edexcel.

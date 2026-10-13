@@ -3,8 +3,12 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import * as z from "zod/v4";
 import { ASSESSMENT_OBJECTIVES, QUESTION_TYPES, type QuestionTypeInfo } from "./spec";
 
-export const MODEL = process.env.MARKING_MODEL || "claude-opus-5-5";
-const EFFORT = (process.env.MARKING_EFFORT || "medium") as "low" | "medium" | "high";
+// Haiku keeps marking to well under 1p per answer. High effort gives it more
+// thinking on 9 and 12-mark answers for a tiny extra cost.
+export const MODEL = process.env.MARKING_MODEL || "claude-haiku-5-5";
+const EFFORT = (process.env.MARKING_EFFORT || "high") as "low" | "medium" | "high";
+// Haiku has no server-side refusal fallback, so only ask for one on larger models.
+const USE_FALLBACK = !MODEL.startsWith("claude-haiku");
 
 const AoSchema = z.object({
   ao: z.enum(["AO1", "AO2", "AO3a", "AO3b"]),
@@ -132,8 +136,7 @@ export async function markAnswer(req: MarkRequest): Promise<Feedback> {
   const response = await getClient().beta.messages.parse({
     model: MODEL,
     max_tokens: 16000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
+    ...(USE_FALLBACK ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
     output_config: { effort: EFFORT, format: FeedbackFormat },
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral", ttl: "1h" } }],
     messages: [{ role: "user", content: buildUserMessage(req) }],

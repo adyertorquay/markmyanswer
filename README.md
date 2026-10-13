@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MarkMyAnswer
 
-## Getting Started
+Free, instant, examiner-style marking for **Edexcel GCSE Business (1BS0)** exam answers. Students pick a practice question (or paste their own), write an answer, and get:
 
-First, run the development server:
+- a mark, and the level reached for 6, 9 and 12-mark questions
+- feedback against each assessment objective (AO1, AO2, AO3a, AO3b)
+- what earned marks and how to get more
+- one sentence from their answer rewritten to reach a higher level
+- redraft and re-mark, with their score progression
+
+No accounts. Marking is done by Claude via the Anthropic API.
+
+## How it works
+
+| File | Purpose |
+|---|---|
+| `src/lib/spec.ts` | Edexcel 1BS0 question types, tariffs, level descriptors and AOs (our own wording) |
+| `src/lib/questions.ts` | Original practice questions and case studies |
+| `src/lib/marker.ts` | Marking prompt and Claude call (structured output, prompt caching, refusal fallback) |
+| `src/lib/ratelimit.ts` | Per-visitor burst and daily limits plus a global daily cap |
+| `src/app/api/mark/route.ts` | `POST /api/mark` |
+| `src/app/Marker.tsx` | The student UI |
+
+## Run locally
 
 ```bash
+cp .env.example .env.local   # add ANTHROPIC_API_KEY
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy (Vercel + Upstash)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Import the repo into Vercel (the Hobby plan is fine to start).
+2. Add a free Upstash Redis database (Vercel Marketplace → Upstash) so `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set.
+3. Add `ANTHROPIC_API_KEY` in Vercel → Settings → Environment Variables.
+4. Set a monthly spend limit in the Anthropic Console as a final safety net.
+5. Point `markmyanswer.co.uk` at Vercel (Settings → Domains).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Running costs
 
-## Learn More
+With `claude-opus-5-5` at medium effort, one marked answer costs roughly 3-4p (the long system prompt is cached). `LIMIT_GLOBAL_PER_DAY` caps the daily bill. Setting `MARKING_MODEL=claude-haiku-5-5` cuts the cost by over 90%, at some cost to marking quality.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Not affiliated with or endorsed by Pearson Edexcel.

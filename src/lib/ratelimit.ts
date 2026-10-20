@@ -73,7 +73,11 @@ let limiter: Limiter | null = null;
 
 export function getLimiter(): Limiter {
   if (!limiter) {
-    const hasUpstash = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+    // The Vercel Marketplace integration may set KV_* names instead; Redis.fromEnv reads both.
+    const env = process.env;
+    const hasUpstash =
+      (env.UPSTASH_REDIS_REST_URL || env.KV_REST_API_URL) &&
+      (env.UPSTASH_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN);
     limiter = hasUpstash ? new UpstashLimiter(Redis.fromEnv()) : new MemoryLimiter();
   }
   return limiter;

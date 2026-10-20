@@ -17,26 +17,6 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #11141b;
-    --surface: #1a1e28;
-    --text: #e9ecf3;
-    --muted: #9aa3b5;
-    --border: #2c3242;
-    --accent: #6d8cff;
-    --accent-text: #0d1020;
-    --accent-soft: #232c4a;
-    --good: #5fd08f;
-    --good-soft: #163324;
-    --warn: #f0b04a;
-    --warn-soft: #3a2c12;
-    --bad: #ff8a80;
-    --bad-soft: #3d1c1a;
-    color-scheme: dark;
-  }
-}
-
 * { box-sizing: border-box; }
 
 html, body { margin: 0; padding: 0; }

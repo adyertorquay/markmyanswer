@@ -25,6 +25,14 @@ Northstar uses batch production. Over the last two years the cost of raw materia
 
 Northstar's directors are deciding whether to introduce lean production methods, such as just-in-time stock control, across the factory.`;
 
+const COASTAL_CRUST = `Coastal Crust Bakery is a small independent business located in Plymouth. Established in 2021, the bakery employs 12 workers and produces a range of freshly baked bread, cakes, pastries and sandwiches. The business has built a loyal customer base by offering high-quality, handmade products using locally sourced ingredients.
+
+Over the past six months, Coastal Crust has experienced a 25% increase in sales after securing contracts to supply three local cafés. However, the increased demand has placed additional pressure on employees, who are now expected to produce more products in the same amount of time.
+
+Recently, the bakery has received several customer complaints about burnt pastries, unevenly baked bread and cakes that vary in size. One of the cafés has threatened to cancel its contract if product quality does not improve.
+
+The owner, Sarah, is concerned that these problems could damage the bakery's reputation and reduce customer loyalty. She also wants to minimise waste, as the business currently throws away approximately 8% of its products due to quality issues.`;
+
 export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
   {
     id: "t1-define-usp",
@@ -134,6 +142,15 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
     marks: 6,
     question: "Analyse the impact on Northstar of late deliveries from its suppliers.",
     context: NORTHSTAR,
+  },
+  {
+    id: "t2-justify-quality",
+    theme: 2,
+    topic: "Making operational decisions",
+    type: "justify",
+    marks: 9,
+    question: "Sarah is considering two options to improve the quality of her products:\nOption 1: Introduce quality control. Employ two additional workers to inspect finished products before they are packaged and delivered to customers. This would cost the business approximately £36,000 per year in additional wages.\nOption 2: Introduce quality assurance. Invest £5,000 in staff training and introduce standardised production procedures to ensure employees consistently meet quality standards throughout the production process.\nJustify which one of these two options Coastal Crust Bakery should choose to improve the quality of its products.",
+    context: COASTAL_CRUST,
   },
   {
     id: "t2-evaluate-lean",

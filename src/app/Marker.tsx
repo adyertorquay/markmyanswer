@@ -25,6 +25,26 @@ const RATING_LABELS: Record<string, string> = {
   missing: "Missing",
 };
 
+// Phone photos are several MB; 1600px on the long side keeps handwriting
+// readable and the upload small.
+async function shrinkPhoto(file: File): Promise<{ mediaType: "image/jpeg"; data: string }> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const data = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
+    return { mediaType: "image/jpeg", data };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 function wordCount(text: string) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
@@ -41,7 +61,10 @@ export default function Marker({ questions }: { questions: PracticeQuestion[] })
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [reading, setReading] = useState(false);
+  const [fromPhoto, setFromPhoto] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
 
   const practice = questions.find((q) => q.id === practiceId);
   const ownTypeInfo = QUESTION_TYPES.find((t) => t.type === ownType)!;
@@ -89,7 +112,36 @@ export default function Marker({ questions }: { questions: PracticeQuestion[] })
     }
   }
 
-  const canSubmit = !loading && answer.trim().length > 0 && current.question.trim().length >= 5;
+  async function readPhoto(file: File) {
+    setReading(true);
+    setError(null);
+    try {
+      const photo = await shrinkPhoto(file).catch(() => null);
+      if (!photo) {
+        setError("That photo couldn't be opened. Please try a different photo.");
+        return;
+      }
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(photo),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong reading your photo. Please try again.");
+        return;
+      }
+      setAnswer((a) => (a.trim() ? `${a.trimEnd()}\n\n${data.text}` : data.text));
+      setFromPhoto(true);
+    } catch {
+      setError("Couldn't reach MarkMyAnswer. Check your connection and try again.");
+    } finally {
+      setReading(false);
+      if (photoRef.current) photoRef.current.value = "";
+    }
+  }
+
+  const canSubmit = !loading && !reading && answer.trim().length > 0 && current.question.trim().length >= 5;
   const themes = [1, 2] as const;
 
   return (
@@ -173,6 +225,25 @@ export default function Marker({ questions }: { questions: PracticeQuestion[] })
           <textarea className="answer" rows={10} maxLength={LIMITS.answer} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Write your answer as you would in the exam" />
           <span className="hint">{wordCount(answer)} words</span>
         </label>
+
+        <div className="photo">
+          <input
+            ref={photoRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) readPhoto(file);
+            }}
+          />
+          <button className="secondary" disabled={reading || loading} onClick={() => photoRef.current?.click()}>
+            {reading ? "Reading your handwriting…" : "📷 Use a photo of my answer"}
+          </button>
+          {fromPhoto && !reading && (
+            <p className="hint">Check the text above matches what you wrote and fix any mistakes before marking. [?] means a word couldn&apos;t be read.</p>
+          )}
+        </div>
 
         {error && <p className="error" role="alert">{error}</p>}
 

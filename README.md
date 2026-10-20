@@ -32,7 +32,7 @@ npm run dev
 ## Deploy (Vercel + Upstash)
 
 1. Import the repo into Vercel (the Hobby plan is fine to start).
-2. Add a free Upstash Redis database (Vercel Marketplace → Upstash) so `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set.
+2. Add a free Upstash Redis database (Vercel Marketplace → Upstash) so `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (or the `KV_REST_API_URL` and `KV_REST_API_TOKEN` it may add instead) are set.
 3. Add `ANTHROPIC_API_KEY` in Vercel → Settings → Environment Variables.
 4. Set a monthly spend limit in the Anthropic Console as a final safety net.
 5. Point `markmyanswer.co.uk` at Vercel (Settings → Domains).

@@ -7,7 +7,7 @@ import { Redis } from "@upstash/redis";
 //   - a daily limit per network, so clearing cookies can't get unlimited marks
 //     (set high because a whole school shares one IP address)
 //   - a global daily cap across everyone (a hard ceiling on the bill)
-export const PER_VISITOR_PER_DAY = Number(process.env.LIMIT_PER_VISITOR_PER_DAY || 20);
+export const PER_VISITOR_PER_DAY = Number(process.env.LIMIT_PER_VISITOR_PER_DAY || 10);
 export const PER_VISITOR_PER_MINUTE = Number(process.env.LIMIT_PER_VISITOR_PER_MINUTE || 4);
 export const PER_NETWORK_PER_DAY = Number(process.env.LIMIT_PER_NETWORK_PER_DAY || 400);
 export const GLOBAL_PER_DAY = Number(process.env.LIMIT_GLOBAL_PER_DAY || 1500);

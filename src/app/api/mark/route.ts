@@ -1,7 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { cookies } from "next/headers";
 import * as z from "zod/v4";
+import { feedbackKey, getFeedbackCache } from "@/lib/feedbackCache";
 import { markAnswer, MarkingRefusedError } from "@/lib/marker";
-import { getLimiter, visitorKey } from "@/lib/ratelimit";
+import { getLimiter, identifyVisitor, VISITOR_COOKIE } from "@/lib/ratelimit";
 import { getQuestionType, LIMITS } from "@/lib/spec";
 
 export const maxDuration = 120;
@@ -34,18 +36,40 @@ export async function POST(request: Request) {
     return error(400, `${type.label} questions are worth ${type.marks.join(" or ")} marks.`);
   }
 
-  const limit = await getLimiter().check(visitorKey(request.headers));
+  const cookieStore = await cookies();
+  const { visitor, isNew } = identifyVisitor(request.headers, cookieStore.get(VISITOR_COOKIE)?.value);
+  if (isNew) {
+    cookieStore.set(VISITOR_COOKIE, visitor.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
+
+  // A resubmitted, unchanged answer gets the same feedback, without using a mark.
+  const markRequest = { ...body, type };
+  const cacheKey = feedbackKey(markRequest);
+  const cached = await getFeedbackCache().get(cacheKey).catch(() => null);
+  if (cached) return Response.json({ feedback: cached, remainingToday: null });
+
+  const limit = await getLimiter().check(visitor);
   if (!limit.ok) {
     const messages = {
       burst: "You're going a bit fast. Take a minute to read your feedback, then try again.",
       daily: "You've used today's free marks. Come back tomorrow for more!",
+      network: "Everyone on your school or home network has used today's free marks. Please try again tomorrow.",
       global: "MarkMyAnswer is very busy today and has reached its daily limit. Please try again tomorrow.",
     };
     return error(429, messages[limit.reason], { retryAfterSeconds: limit.retryAfterSeconds });
   }
 
   try {
-    const feedback = await markAnswer({ ...body, type });
+    const feedback = await markAnswer(markRequest);
+    await getFeedbackCache()
+      .set(cacheKey, feedback)
+      .catch((err) => console.error("Caching feedback failed", err));
     return Response.json({ feedback, remainingToday: limit.remainingToday });
   } catch (err) {
     if (err instanceof MarkingRefusedError) {

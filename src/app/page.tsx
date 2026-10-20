@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Marker from "./Marker";
 import { PRACTICE_QUESTIONS } from "@/lib/questions";
 
@@ -5,7 +6,9 @@ export default function Home() {
   return (
     <main className="page">
       <header className="hero">
-        <h1>MarkMyAnswer</h1>
+        <h1>
+          <Image className="logo" src="/logo.png" alt="MarkMyAnswer" width={521} height={301} priority />
+        </h1>
         <p className="tagline">
           Instant, examiner-style marking for <strong>Edexcel GCSE Business</strong>. Free for every student, no sign-up.
         </p>

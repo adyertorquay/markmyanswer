@@ -181,7 +181,9 @@ export default function Marker({ questions }: { questions: PracticeQuestion[] })
             )}
             <div className="question">
               <p>{practice.question.split("\n").map((line, i) => <span key={i}>{line}<br /></span>)}</p>
-              <span className="marks-badge">({practice.marks} {practice.marks === 1 ? "mark" : "marks"})</span>
+              <span className="marks-badge">
+                ({practice.marks} {practice.marks === 1 ? "mark" : "marks"}){practice.source && ` · ${practice.source}`}
+              </span>
             </div>
           </>
         )}

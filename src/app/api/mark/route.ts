@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { feedbackKey, getFeedbackCache } from "@/lib/feedbackCache";
 import { markAnswer, MarkingRefusedError } from "@/lib/marker";
+import { findMarkScheme } from "@/lib/questions";
 import { getLimiter } from "@/lib/ratelimit";
 import { getQuestionType, LIMITS } from "@/lib/spec";
 import { currentVisitor } from "@/lib/visitor";
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   const visitor = await currentVisitor(request);
 
   // A resubmitted, unchanged answer gets the same feedback, without using a mark.
-  const markRequest = { ...body, type };
+  const markRequest = { ...body, type, markScheme: findMarkScheme(body.question, type.type, body.marks) };
   const cacheKey = feedbackKey(markRequest);
   const cached = await getFeedbackCache().get(cacheKey).catch(() => null);
   if (cached) return Response.json({ feedback: cached, remainingToday: null });

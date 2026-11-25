@@ -10,14 +10,18 @@ import { Redis } from "@upstash/redis";
 export const PER_VISITOR_PER_DAY = Number(process.env.LIMIT_PER_VISITOR_PER_DAY || 10);
 export const PER_VISITOR_PER_MINUTE = Number(process.env.LIMIT_PER_VISITOR_PER_MINUTE || 4);
 export const PER_NETWORK_PER_DAY = Number(process.env.LIMIT_PER_NETWORK_PER_DAY || 400);
+export const PHOTOS_PER_VISITOR_PER_DAY = Number(process.env.LIMIT_PHOTOS_PER_VISITOR_PER_DAY || 10);
 export const GLOBAL_PER_DAY = Number(process.env.LIMIT_GLOBAL_PER_DAY || 1500);
 
 export type LimitResult =
   | { ok: true; remainingToday: number }
-  | { ok: false; reason: "burst" | "daily" | "network" | "global"; retryAfterSeconds: number };
+  | { ok: false; reason: "burst" | "daily" | "photos" | "network" | "global"; retryAfterSeconds: number };
 
 interface Limiter {
   check(visitor: Visitor): Promise<LimitResult>;
+  // Reading a photo of handwriting has its own daily allowance, so it doesn't
+  // use up marks, but still counts towards the network and global caps.
+  checkPhoto(visitor: Visitor): Promise<LimitResult>;
 }
 
 export interface Visitor {
@@ -28,22 +32,32 @@ export interface Visitor {
 class UpstashLimiter implements Limiter {
   private burst: Ratelimit;
   private daily: Ratelimit;
+  private photos: Ratelimit;
   private network: Ratelimit;
   private global: Ratelimit;
 
   constructor(redis: Redis) {
     this.burst = new Ratelimit({ redis, prefix: "mma:burst", limiter: Ratelimit.slidingWindow(PER_VISITOR_PER_MINUTE, "1 m") });
     this.daily = new Ratelimit({ redis, prefix: "mma:daily", limiter: Ratelimit.fixedWindow(PER_VISITOR_PER_DAY, "1 d") });
+    this.photos = new Ratelimit({ redis, prefix: "mma:photos", limiter: Ratelimit.fixedWindow(PHOTOS_PER_VISITOR_PER_DAY, "1 d") });
     this.network = new Ratelimit({ redis, prefix: "mma:network", limiter: Ratelimit.fixedWindow(PER_NETWORK_PER_DAY, "1 d") });
     this.global = new Ratelimit({ redis, prefix: "mma:global", limiter: Ratelimit.fixedWindow(GLOBAL_PER_DAY, "1 d") });
   }
 
-  async check(visitor: Visitor): Promise<LimitResult> {
+  check(visitor: Visitor) {
+    return this.run(visitor, this.daily, "daily");
+  }
+
+  checkPhoto(visitor: Visitor) {
+    return this.run(visitor, this.photos, "photos");
+  }
+
+  private async run(visitor: Visitor, allowance: Ratelimit, reason: "daily" | "photos"): Promise<LimitResult> {
     const secs = (reset: number) => Math.max(1, Math.ceil((reset - Date.now()) / 1000));
     const burst = await this.burst.limit(visitor.id);
     if (!burst.success) return { ok: false, reason: "burst", retryAfterSeconds: secs(burst.reset) };
-    const daily = await this.daily.limit(visitor.id);
-    if (!daily.success) return { ok: false, reason: "daily", retryAfterSeconds: secs(daily.reset) };
+    const daily = await allowance.limit(visitor.id);
+    if (!daily.success) return { ok: false, reason, retryAfterSeconds: secs(daily.reset) };
     const network = await this.network.limit(visitor.network);
     if (!network.success) return { ok: false, reason: "network", retryAfterSeconds: secs(network.reset) };
     const global = await this.global.limit("all");
@@ -69,12 +83,20 @@ class MemoryLimiter implements Limiter {
     return { ok: true, remaining: max - recent.length, retryAfterSeconds: 0 };
   }
 
-  async check(visitor: Visitor): Promise<LimitResult> {
+  async check(visitor: Visitor) {
+    return this.run(visitor, "d", PER_VISITOR_PER_DAY, "daily");
+  }
+
+  async checkPhoto(visitor: Visitor) {
+    return this.run(visitor, "p", PHOTOS_PER_VISITOR_PER_DAY, "photos");
+  }
+
+  private run(visitor: Visitor, prefix: string, max: number, reason: "daily" | "photos"): LimitResult {
     const day = 24 * 60 * 60 * 1000;
     const burst = this.count(`b:${visitor.id}`, 60_000, PER_VISITOR_PER_MINUTE);
     if (!burst.ok) return { ok: false, reason: "burst", retryAfterSeconds: burst.retryAfterSeconds };
-    const daily = this.count(`d:${visitor.id}`, day, PER_VISITOR_PER_DAY);
-    if (!daily.ok) return { ok: false, reason: "daily", retryAfterSeconds: daily.retryAfterSeconds };
+    const daily = this.count(`${prefix}:${visitor.id}`, day, max);
+    if (!daily.ok) return { ok: false, reason, retryAfterSeconds: daily.retryAfterSeconds };
     const network = this.count(`n:${visitor.network}`, day, PER_NETWORK_PER_DAY);
     if (!network.ok) return { ok: false, reason: "network", retryAfterSeconds: network.retryAfterSeconds };
     const global = this.count("g", day, GLOBAL_PER_DAY);

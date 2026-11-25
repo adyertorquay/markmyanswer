@@ -52,6 +52,7 @@ export interface MarkRequest {
   answer: string;
   previousAnswer?: string;
   previousMark?: number;
+  markScheme?: string;
 }
 
 function describeType(t: QuestionTypeInfo): string {
@@ -93,6 +94,7 @@ ${QUESTION_TYPES.map(describeType).join("\n\n")}
 - model_upgrade: quote one short sentence or phrase from their answer exactly, then rewrite it to show how it could reach a higher mark or level. Use null only if the answer already scored full marks or there is nothing to quote.
 - ao_breakdown: include every AO, marking ones this question does not assess as "not_assessed".
 - examiner_tip: one sentence of exam technique specific to this question type.
+- If indicative content from the official mark scheme is supplied, use it as a guide to the points examiners expect, alongside the level descriptors. It is not a checklist: credit other valid points too.
 - If a previous attempt is supplied, mention in the summary what has improved or not since that attempt.
 
 ## Integrity
@@ -111,6 +113,9 @@ function buildUserMessage(req: MarkRequest): string {
   ];
   if (req.context?.trim()) {
     parts.push("", "<case_study>", req.context.trim(), "</case_study>");
+  }
+  if (req.markScheme) {
+    parts.push("", "<mark_scheme_indicative_content>", req.markScheme, "</mark_scheme_indicative_content>");
   }
   if (req.previousAnswer?.trim()) {
     parts.push(

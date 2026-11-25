@@ -64,6 +64,7 @@ export function feedbackKey(req: MarkRequest): string {
     normalise(req.answer),
     normalise(req.previousAnswer),
     req.previousMark ?? "",
+    req.markScheme ?? "",
   ];
   return createHash("sha256").update(JSON.stringify(parts)).digest("hex");
 }

@@ -54,6 +54,22 @@ Branding is very important to Lumi. It has developed collaborations with Gymshar
 
 The fitness industry is growing rapidly in the UK. It is now worth £5.7 billion and has grown by 8.8% since 2023. Over 60% of the population is physically active, but there is still a concern that many people are not active enough and should do more to keep fit.`;
 
+const BELLAS_BAKERY = `Bella's Bakery is a small independent bakery based in Devon. The business was established in 2019 and employs six members of staff. It sells freshly baked cakes, pastries and bread to customers through its high street shop. It also supplies several local cafés and restaurants.
+
+Over the past year, the business has experienced an increase in demand for its products. However, the cost of ingredients, including flour, butter and sugar, has increased by 20%. The business also faces rising energy costs due to the regular use of its commercial ovens.
+
+Although Bella's Bakery is profitable, it is experiencing cash flow problems. Its suppliers currently require payment within 14 days, whereas its business customers have up to 60 days to pay for their orders.
+
+The owner has produced a cash flow forecast for the next three months:
+
+January: opening balance £2,000; cash inflows £12,000; cash outflows £13,500; net cash flow -£1,500; closing balance £500.
+
+February: opening balance £500; cash inflows £13,000; cash outflows £14,000; net cash flow -£1,000; closing balance -£500.
+
+March: opening balance -£500; cash inflows £15,000; cash outflows £15,500; net cash flow -£500; closing balance -£1,000.
+
+The owner is concerned that the business may struggle to pay employees and suppliers on time. However, maintaining good relationships with suppliers and customers is important to the long-term success of the business.`;
+
 export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
   {
     id: "t1-define-usp",
@@ -130,6 +146,15 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
     marks: 12,
     question: "Evaluate whether good customer service is the most important factor in Brew Bike's success. You should use the information provided as well as your knowledge of business.",
     context: BREW_BIKE,
+  },
+  {
+    id: "t1-justify-cash-flow",
+    theme: 1,
+    topic: "Putting a business idea into practice",
+    type: "justify",
+    marks: 9,
+    question: "Bella's Bakery is considering two options to improve its cash flow:\nOption 1: Negotiate an increase in trade credit from 14 days to 45 days with its suppliers.\nOption 2: Offer business customers a 5% discount if they pay their invoices within 14 days.\nJustify which one of these two options Bella's Bakery should choose to improve its cash flow.",
+    context: BELLAS_BAKERY,
   },
   {
     id: "p1-2026-castleton-customer-service",

@@ -70,6 +70,14 @@ March: opening balance -£500; cash inflows £15,000; cash outflows £15,500; ne
 
 The owner is concerned that the business may struggle to pay employees and suppliers on time. However, maintaining good relationships with suppliers and customers is important to the long-term success of the business.`;
 
+const COASTAL_COFFEE = `Coastal Coffee is an independent coffee shop located in a popular seaside town in Devon. The business sells a range of hot drinks, cakes and sandwiches to local residents and tourists.
+
+The business currently has monthly fixed costs of £4,800. Its average selling price is £4 per product, with variable costs of £1.60 per product. Coastal Coffee currently sells 2,200 products each month.
+
+However, rising energy bills and increased competition from a national coffee chain have put pressure on the business's profitability. The owner wants to reduce the break-even point and is considering two options.
+
+The new supplier offers cheaper ingredients, but the owner is concerned that this could affect product quality. Increasing prices could also encourage customers to visit competitors.`;
+
 export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
   {
     id: "t1-define-usp",
@@ -155,6 +163,15 @@ export const PRACTICE_QUESTIONS: PracticeQuestion[] = [
     marks: 9,
     question: "Bella's Bakery is considering two options to improve its cash flow:\nOption 1: Negotiate an increase in trade credit from 14 days to 45 days with its suppliers.\nOption 2: Offer business customers a 5% discount if they pay their invoices within 14 days.\nJustify which one of these two options Bella's Bakery should choose to improve its cash flow.",
     context: BELLAS_BAKERY,
+  },
+  {
+    id: "t1-justify-breakeven",
+    theme: 1,
+    topic: "Putting a business idea into practice",
+    type: "justify",
+    marks: 9,
+    question: "The owner of Coastal Coffee wants to reduce the break-even point and is considering two options:\nOption 1: Increase the average selling price from £4 to £4.50.\nOption 2: Change suppliers to reduce variable costs from £1.60 to £1.10 per product.\nJustify which one of these two options Coastal Coffee should choose to reduce its break-even point.",
+    context: COASTAL_COFFEE,
   },
   {
     id: "p1-2026-castleton-customer-service",
